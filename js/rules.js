@@ -8,18 +8,38 @@
   // Dice in a dice: the system secretly rolls a hidden lucky number (1–6), then you roll a normal die.
   // Miss: you're dealt (base + roll) random tiles. Match the hidden number: you choose how many (up to JACKPOT_MAX).
   // You build your word from some of the tiles; unused tiles become your opponent's decoys.
+  //
+  // Level-up ladder: every player starts at Level 1 and goes up one level per word they crack (max 10).
+  // A challenge uses the opponent's level. Easy/Medium/High are kept only for older games.
   const LEVELS = {
-    Easy:   { base: 6,  minWord: 3, tries: 3, bonus: 1,   hint: true,
-              blurb: 'Roll + 6 tiles (7–12). Word of 3+ letters, 3 tries, hints allowed.' },
-    Medium: { base: 8,  minWord: 5, tries: 3, bonus: 1.5, hint: true,
-              blurb: 'Roll + 8 tiles (9–14). Word of 5+ letters, 3 tries, points ×1.5.' },
-    High:   { base: 10, minWord: 7, tries: 2, bonus: 2,   hint: false,
-              blurb: 'Roll + 10 tiles (11–16). Word of 7+ letters, 2 tries, no hint, points ×2.' }
+    '1':  { base: 4,  minWord: 3, tries: 3, bonus: 1,    hint: true,  hours: 23 },
+    '2':  { base: 5,  minWord: 4, tries: 3, bonus: 1.2,  hint: true,  hours: 23 },
+    '3':  { base: 6,  minWord: 4, tries: 3, bonus: 1.4,  hint: true,  hours: 23 },
+    '4':  { base: 7,  minWord: 5, tries: 3, bonus: 1.6,  hint: true,  hours: 20 },
+    '5':  { base: 8,  minWord: 5, tries: 2, bonus: 1.8,  hint: true,  hours: 20 },
+    '6':  { base: 9,  minWord: 6, tries: 2, bonus: 2,    hint: true,  hours: 18 },
+    '7':  { base: 10, minWord: 6, tries: 2, bonus: 2.25, hint: false, hours: 16 },
+    '8':  { base: 11, minWord: 7, tries: 2, bonus: 2.5,  hint: false, hours: 14 },
+    '9':  { base: 12, minWord: 7, tries: 1, bonus: 2.75, hint: false, hours: 12 },
+    '10': { base: 13, minWord: 8, tries: 1, bonus: 3,    hint: false, hours: 12 },
+    Easy:   { base: 6,  minWord: 3, tries: 3, bonus: 1,   hint: true,  hours: 23 },
+    Medium: { base: 8,  minWord: 5, tries: 3, bonus: 1.5, hint: true,  hours: 23 },
+    High:   { base: 10, minWord: 7, tries: 2, bonus: 2,   hint: false, hours: 23 }
   };
+  const MAX_LEVEL = 10;
   const JACKPOT_MAX = 20;
   const MAX_WORD = 13; // longest word that fits the board
   // Share of the score kept on each try
-  const TRY_SHARE = { 2: [1, 0.5], 3: [1, 0.6, 0.3] };
+  const TRY_SHARE = { 1: [1], 2: [1, 0.5], 3: [1, 0.6, 0.3] };
+
+  function levelName(level) { return /^\d+$/.test(String(level)) ? 'Level ' + level : String(level); }
+
+  function blurb(level) {
+    const L = LEVELS[level];
+    return (L.base + 1) + '–' + (L.base + 6) + ' tiles, words of ' + L.minWord + '+ letters, ' +
+      L.tries + (L.tries === 1 ? ' try' : ' tries') + ', ' + (L.hint ? 'hint allowed' : 'no hint') + ', ' +
+      L.hours + ' hours' + (L.bonus !== 1 ? ', points ×' + L.bonus : '') + '.';
+  }
 
   const PREMIUM = {
     TW: ['0,0', '0,6', '0,12', '6,0', '6,12', '12,0', '12,6', '12,12'],
@@ -97,5 +117,5 @@
     return guess.split('').every(ch => (pool[ch] = (pool[ch] || 0) - 1) >= 0);
   }
 
-  window.WCRules = { SIZE, CENTER, MAX_WORD, JACKPOT_MAX, LETTER_POINTS, LEVELS, TRY_SHARE, premiumAt, readPlacement, score, maxScore, finalPoints, maxPoints, fromRack };
+  window.WCRules = { SIZE, CENTER, MAX_WORD, MAX_LEVEL, JACKPOT_MAX, levelName, blurb, LETTER_POINTS, LEVELS, TRY_SHARE, premiumAt, readPlacement, score, maxScore, finalPoints, maxPoints, fromRack };
 })();

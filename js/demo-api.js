@@ -2,9 +2,9 @@
 // Mirrors apps-script/Code.gs so the game can be tried before the web app is deployed.
 (function () {
   const R = () => window.WCRules;
-  const HOURS = 23;
-  const KEY = 'wc-demo-games-v3';
-  const DEALS_KEY = 'wc-demo-deals-v2';
+  const hoursFor = g => (R().LEVELS[g.level] || R().LEVELS['1']).hours;
+  const KEY = 'wc-demo-games-v4';
+  const DEALS_KEY = 'wc-demo-deals-v3';
   const BAG = { E: 12, A: 9, I: 9, O: 8, N: 6, R: 6, T: 6, L: 4, S: 4, U: 4, D: 4, G: 3,
     B: 2, C: 2, M: 2, P: 2, F: 2, H: 2, V: 2, W: 2, Y: 2, K: 1, J: 1, X: 1, Q: 1, Z: 1 };
   let dealsMem = {};
@@ -30,7 +30,7 @@
     let g; try { g = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { g = memory; }
     let changed = false;
     g.forEach(x => {
-      if (x.status === 'Pending' && Date.now() >= new Date(x.created).getTime() + HOURS * 3600000) {
+      if (x.status === 'Pending' && Date.now() >= new Date(x.created).getTime() + hoursFor(x) * 3600000) {
         x.status = 'Expired'; x.points = 0; changed = true;
       }
     });
@@ -59,31 +59,44 @@
       jackpot: !!g.lucky && g.lucky === g.dice, status: g.status,
       attempts: g.attempts, attemptsLeft: Math.max(0, tries - g.attempts), maxAttempts: tries,
       maxPoints: R().maxPoints(g.word, g.level), points: g.points, guesses: g.guesses,
-      expiresAt: new Date(new Date(g.created).getTime() + HOURS * 3600000).toISOString(),
+      expiresAt: new Date(new Date(g.created).getTime() + hoursFor(g) * 3600000).toISOString(),
       word: over ? g.word : null, created: g.created
     };
   }
 
+  function playerLevel(name) {
+    const n = clean(name).toLowerCase();
+    if (!n) return 1;
+    const solved = load().filter(g => g.status === 'Solved' && g.opponent.toLowerCase() === n).length;
+    return Math.min(R().MAX_LEVEL, 1 + solved);
+  }
+
   const actions = {
+    level(p) {
+      const level = playerLevel(p.name);
+      return { ok: true, name: clean(p.name), level, rules: R().LEVELS[String(level)] };
+    },
     deal(p) {
       const deals = loadDeals();
-      let level = R().LEVELS[p.level] ? p.level : 'High';
+      let forName = clean(p.opponent);
+      if (!forName) throw new Error("Enter your opponent's name first.");
+      let level = String(playerLevel(forName));
       let isRedraw = false;
       if (p.prev) {
         const prev = deals[p.prev];
         if (!prev) throw new Error('That roll was not found. Roll again.');
         if (prev.isRedraw) throw new Error("You've used your free redraw — make a word from these tiles.");
         if (prev.used) throw new Error('That roll has already been used.');
-        prev.used = 'redrawn'; level = prev.level; isRedraw = true;
+        prev.used = 'redrawn'; level = prev.level; forName = prev.forName || forName; isRedraw = true;
       }
       const lucky = 1 + Math.floor(Math.random() * 6); // the system's hidden die
       const roll = 1 + Math.floor(Math.random() * 6);  // the player's die
       const jackpot = roll === lucky;
       const letters = jackpot ? '' : drawTiles(R().LEVELS[level].base + roll);
       const id = 'D' + Math.random().toString(36).slice(2, 12).toUpperCase();
-      deals[id] = { level, roll, lucky, letters, isRedraw, used: '' };
+      deals[id] = { level, roll, lucky, letters, isRedraw, used: '', forName };
       saveDeals(deals);
-      return { ok: true, dealId: id, level, roll, lucky, jackpot, letters: letters ? letters.split('') : [],
+      return { ok: true, dealId: id, level, opponent: forName, roll, lucky, jackpot, letters: letters ? letters.split('') : [],
         canRedraw: !isRedraw, chooseFrom: jackpot ? R().LEVELS[level].minWord : null, chooseTo: jackpot ? R().JACKPOT_MAX : null };
     },
     claim(p) {
@@ -108,10 +121,11 @@
       const deal = deals[p.deal];
       if (!deal) throw new Error('Roll the dice first.');
       if (deal.used) throw new Error('That draw has already been used. Roll again.');
+      if (deal.forName && deal.forName.toLowerCase() !== opponent.toLowerCase()) throw new Error('That roll was for ' + deal.forName + '. Roll again for ' + opponent + '.');
       const level = deal.level, L = R().LEVELS[level], dice = deal.roll;
       if (!deal.letters) throw new Error('Choose how many tiles you want first.');
       if (!/^[A-Z]+$/.test(word)) throw new Error('The word can only use letters A–Z.');
-      if (word.length < L.minWord) throw new Error(level + ' needs a word of at least ' + L.minWord + ' letters.');
+      if (word.length < L.minWord) throw new Error(R().levelName(level) + ' needs a word of at least ' + L.minWord + ' letters.');
       if (word.length > R().MAX_WORD) throw new Error('Words can be at most ' + R().MAX_WORD + ' letters.');
       if (!R().fromRack(word, deal.letters.split(''))) throw new Error('Use only the tiles you were dealt.');
       const games = load();
@@ -154,7 +168,9 @@
         g.status = 'Solved'; g.points = R().finalPoints(boardScore, g.level, g.attempts); result = 'correct';
       } else if (g.attempts >= tries) { g.status = 'Failed'; g.points = 0; result = 'failed'; }
       save(games);
-      return { ok: true, result, boardScore, dir: placed.dir, game: pub(g) };
+      const out = { ok: true, result, boardScore, dir: placed.dir, game: pub(g) };
+      if (result === 'correct') out.newLevel = playerLevel(g.opponent);
+      return out;
     },
     inbox(p) {
       const n = clean(p.name).toLowerCase();
@@ -171,6 +187,7 @@
         t[k] = t[k] || { player: g.opponent, points: 0, solved: 0 };
         t[k].points += g.points; t[k].solved += 1;
       });
+      Object.values(t).forEach(x => { x.level = Math.min(R().MAX_LEVEL, 1 + x.solved); });
       return { ok: true, leaderboard: Object.values(t).sort((a, b) => b.points - a.points || b.solved - a.solved) };
     }
   };

@@ -9,9 +9,10 @@
  *   Leaderboard — formula tab, totals by player
  *
  * The game screen (GitHub Pages) calls this web app with GET requests:
- *   ?action=deal&level=Easy|Medium|High[&prev=DEALID]   system rolls a hidden lucky number, player rolls; deal tiles (one free redraw)
+ *   ?action=level&name=   a player's ladder level (1–10)
+ *   ?action=deal&opponent=NAME[&prev=DEALID]   system rolls a hidden lucky number, player rolls; deal tiles (one free redraw)
  *   ?action=claim&deal=DEALID&count=N   after hitting the lucky number, choose how many tiles
- *   ?action=create&setter=&opponent=&word=&hint=&deal=DEALID
+ *   ?action=create&setter=&opponent=&word=&hint=&deal=DEALID   (level comes from the deal)
  *   ?action=game&id=
  *   ?action=guess&id=&player=&cells=6,2,C;6,3,O;...   (row,col,letter for each tile on the board)
  *   ?action=inbox&name=
@@ -22,25 +23,39 @@
  */
 
 const SHEET_GAMES = 'Games';
-const RESPONSE_HOURS = 23; // opponent must answer within this time
 
 // Dice in a dice: the system secretly rolls a die for a hidden lucky number (1–6), then the setter rolls.
 // Miss: they're dealt (base + roll) random tiles. Match the hidden number: they choose how many tiles (up to JACKPOT_MAX).
 // They build a word from some of the tiles; unused tiles become the opponent's decoys.
+//
+// Level-up ladder: every player starts at Level 1 and goes up one level per word they crack (max 10).
+// A challenge uses the opponent's level; `hours` is how long they get to answer.
+// Easy/Medium/High are kept only so older games still read correctly.
 const LEVELS = {
-  Easy:   { base: 6,  minWord: 3, tries: 3, bonus: 1,   hint: true },
-  Medium: { base: 8,  minWord: 5, tries: 3, bonus: 1.5, hint: true },
-  High:   { base: 10, minWord: 7, tries: 2, bonus: 2,   hint: false }
+  '1':  { base: 4,  minWord: 3, tries: 3, bonus: 1,    hint: true,  hours: 23 },
+  '2':  { base: 5,  minWord: 4, tries: 3, bonus: 1.2,  hint: true,  hours: 23 },
+  '3':  { base: 6,  minWord: 4, tries: 3, bonus: 1.4,  hint: true,  hours: 23 },
+  '4':  { base: 7,  minWord: 5, tries: 3, bonus: 1.6,  hint: true,  hours: 20 },
+  '5':  { base: 8,  minWord: 5, tries: 2, bonus: 1.8,  hint: true,  hours: 20 },
+  '6':  { base: 9,  minWord: 6, tries: 2, bonus: 2,    hint: true,  hours: 18 },
+  '7':  { base: 10, minWord: 6, tries: 2, bonus: 2.25, hint: false, hours: 16 },
+  '8':  { base: 11, minWord: 7, tries: 2, bonus: 2.5,  hint: false, hours: 14 },
+  '9':  { base: 12, minWord: 7, tries: 1, bonus: 2.75, hint: false, hours: 12 },
+  '10': { base: 13, minWord: 8, tries: 1, bonus: 3,    hint: false, hours: 12 },
+  Easy:   { base: 6,  minWord: 3, tries: 3, bonus: 1,   hint: true,  hours: 23 },
+  Medium: { base: 8,  minWord: 5, tries: 3, bonus: 1.5, hint: true,  hours: 23 },
+  High:   { base: 10, minWord: 7, tries: 2, bonus: 2,   hint: false, hours: 23 }
 };
+const MAX_LEVEL = 10;
 const JACKPOT_MAX = 20;
 const MAX_WORD = 13; // longest word that fits the board
 const SHEET_DEALS = 'Deals';
-const DEAL_HEADERS = ['DealID', 'Created', 'Level', 'Roll', 'Lucky', 'Letters', 'IsRedraw', 'Used'];
-const D = { id: 0, created: 1, level: 2, roll: 3, lucky: 4, letters: 5, redraw: 6, used: 7 };
+const DEAL_HEADERS = ['DealID', 'Created', 'Level', 'Roll', 'Lucky', 'Letters', 'IsRedraw', 'Used', 'For'];
+const D = { id: 0, created: 1, level: 2, roll: 3, lucky: 4, letters: 5, redraw: 6, used: 7, forName: 8 };
 // Letter bag, Scrabble-style frequencies (no blanks)
 const BAG = { E: 12, A: 9, I: 9, O: 8, N: 6, R: 6, T: 6, L: 4, S: 4, U: 4, D: 4, G: 3,
   B: 2, C: 2, M: 2, P: 2, F: 2, H: 2, V: 2, W: 2, Y: 2, K: 1, J: 1, X: 1, Q: 1, Z: 1 };
-const TRY_SHARE = { 2: [1, 0.5], 3: [1, 0.6, 0.3] };
+const TRY_SHARE = { 1: [1], 2: [1, 0.5], 3: [1, 0.6, 0.3] };
 
 const HEADERS = ['GameID', 'Created', 'Setter', 'Opponent', 'Word', 'Hint',
   'Scrambled', 'Status', 'Guess', 'Attempts', 'Points', 'SolvedAt', 'Dice', 'Level', 'Lucky'];
@@ -75,6 +90,7 @@ function doGet(e) {
   let out;
   try {
     switch (p.action) {
+      case 'level':       out = levelInfo_(p.name); break;
       case 'deal':        out = deal_(p); break;
       case 'claim':       out = claim_(p); break;
       case 'create':      out = createGame_(p); break;
@@ -105,7 +121,9 @@ function deal_(p) {
   lock.waitLock(10000);
   try {
     const sh = dealsSheet_();
-    let level = LEVELS[p.level] ? p.level : 'High';
+    let forName = cleanName_(p.opponent);
+    if (!forName) throw new Error("Enter your opponent's name first.");
+    let level = String(playerLevel_(forName));
     let isRedraw = false;
     if (p.prev) {
       const prev = findDeal_(p.prev);
@@ -113,7 +131,8 @@ function deal_(p) {
       if (prev.row[D.redraw] === true || prev.row[D.redraw] === 'TRUE') throw new Error("You've used your free redraw — make a word from these tiles.");
       if (prev.row[D.used]) throw new Error('That roll has already been used.');
       sh.getRange(prev.rowNum, D.used + 1).setValue('redrawn');
-      level = prev.row[D.level];
+      level = String(prev.row[D.level]);
+      forName = String(prev.row[D.forName] || forName);
       isRedraw = true;
     }
     const lucky = 1 + Math.floor(Math.random() * 6); // the system's hidden die
@@ -121,9 +140,9 @@ function deal_(p) {
     const jackpot = roll === lucky;
     const letters = jackpot ? '' : drawTiles_(LEVELS[level].base + roll);
     const id = 'D' + Utilities.getUuid().replace(/-/g, '').slice(0, 10).toUpperCase();
-    sh.appendRow([id, new Date(), level, roll, lucky, letters, isRedraw, '']);
+    sh.appendRow([id, new Date(), level, roll, lucky, letters, isRedraw, '', forName]);
     return {
-      ok: true, dealId: id, level: level, roll: roll, lucky: lucky, jackpot: jackpot,
+      ok: true, dealId: id, level: level, opponent: forName, roll: roll, lucky: lucky, jackpot: jackpot,
       letters: letters ? letters.split('') : [], canRedraw: !isRedraw,
       chooseFrom: jackpot ? LEVELS[level].minWord : null, chooseTo: jackpot ? JACKPOT_MAX : null
     };
@@ -141,7 +160,7 @@ function claim_(p) {
     if (!deal) throw new Error('That roll was not found. Roll again.');
     if (Number(deal.row[D.roll]) !== Number(deal.row[D.lucky])) throw new Error("That roll didn't match the lucky number.");
     if (deal.row[D.letters]) throw new Error('You already chose your tiles.');
-    const level = deal.row[D.level];
+    const level = String(deal.row[D.level]);
     const count = Number(p.count);
     if (!(count >= LEVELS[level].minWord && count <= JACKPOT_MAX)) {
       throw new Error('Choose between ' + LEVELS[level].minWord + ' and ' + JACKPOT_MAX + ' tiles.');
@@ -165,12 +184,15 @@ function createGame_(p) {
   const deal = findDeal_(p.deal);
   if (!deal) throw new Error('Roll the dice first.');
   if (deal.row[D.used]) throw new Error('That roll has already been used. Roll again.');
-  const level = deal.row[D.level];
+  if (deal.row[D.forName] && String(deal.row[D.forName]).toLowerCase() !== opponent.toLowerCase()) {
+    throw new Error('That roll was for ' + deal.row[D.forName] + '. Roll again for ' + opponent + '.');
+  }
+  const level = String(deal.row[D.level]);
   const L = LEVELS[level];
   const letters = String(deal.row[D.letters]);
   if (!letters) throw new Error('Choose how many tiles you want first.');
   if (!/^[A-Z]+$/.test(word)) throw new Error('The word can only use letters A–Z.');
-  if (word.length < L.minWord) throw new Error(level + ' needs a word of at least ' + L.minWord + ' letters.');
+  if (word.length < L.minWord) throw new Error((/^\d+$/.test(level) ? 'Level ' + level : level) + ' needs a word of at least ' + L.minWord + ' letters.');
   if (word.length > MAX_WORD) throw new Error('Words can be at most ' + MAX_WORD + ' letters.');
   if (!fromRack_(word, letters)) throw new Error('Use only the tiles you were dealt.');
   const hint = L.hint ? String(p.hint || '').trim().slice(0, 120) : '';
@@ -253,7 +275,9 @@ function submitGuess_(p) {
     row[COL.Guess] = guesses;
     gamesSheet_().getRange(found.rowNum, 1, 1, HEADERS.length).setValues([row]);
 
-    return { ok: true, result: result, boardScore: boardScore, dir: placed.dir, game: publicGame_(row) };
+    const out = { ok: true, result: result, boardScore: boardScore, dir: placed.dir, game: publicGame_(row) };
+    if (result === 'correct') out.newLevel = playerLevel_(row[COL.Opponent]);
+    return out;
   } finally {
     lock.releaseLock();
   }
@@ -283,7 +307,10 @@ function leaderboard_() {
     totals[key].points += Number(r[COL.Points] || 0);
     totals[key].solved += 1;
   });
-  const list = Object.keys(totals).map(k => totals[k])
+  const list = Object.keys(totals).map(k => {
+    totals[k].level = Math.min(MAX_LEVEL, 1 + totals[k].solved);
+    return totals[k];
+  })
     .sort((a, b) => b.points - a.points || b.solved - a.solved)
     .slice(0, 20);
   return { ok: true, leaderboard: list };
@@ -321,12 +348,26 @@ function publicGame_(row) {
 }
 
 function levelOf_(row) {
-  return LEVELS[row[COL.Level]] ? row[COL.Level] : 'Easy';
+  const v = String(row[COL.Level]);
+  return LEVELS[v] ? v : 'Easy';
+}
+
+/** A player's ladder level: 1 + words they've cracked, up to MAX_LEVEL. */
+function playerLevel_(name) {
+  const n = cleanName_(name).toLowerCase();
+  if (!n) return 1;
+  const solved = allRows_().filter(r => r[COL.Status] === 'Solved' && String(r[COL.Opponent]).toLowerCase() === n).length;
+  return Math.min(MAX_LEVEL, 1 + solved);
+}
+
+function levelInfo_(name) {
+  const level = playerLevel_(name);
+  return { ok: true, name: cleanName_(name), level: level, rules: LEVELS[String(level)] };
 }
 
 function expiresAt_(row) {
   const created = row[COL.Created] instanceof Date ? row[COL.Created] : new Date(row[COL.Created]);
-  return new Date(created.getTime() + RESPONSE_HOURS * 3600 * 1000);
+  return new Date(created.getTime() + LEVELS[levelOf_(row)].hours * 3600 * 1000);
 }
 
 /**
@@ -538,10 +579,13 @@ function setup() {
  * Logs the game code to send to your opponent.
  */
 function addChallenge() {
-  const word = 'PUGNACIOUS';
-  const level = 'High';
-  const tiles = 14; // tiles on the opponent's rack: the word plus random decoys
+  const setter = 'Rawley';
+  const opponent = 'Amalu';
+  const word = 'RABBIT';
+  const hint = 'A fluffy pet with long ears';
+  const level = String(playerLevel_(opponent)); // uses the opponent's ladder level
+  const tiles = Math.max(word.length + 1, LEVELS[level].base + 3); // the word plus random decoys
   const rack = word + drawTiles_(tiles - word.length);
-  const res = insertGame_('Rawley', 'Opponent', word, '', '', level, rack, '');
+  const res = insertGame_(setter, opponent, word, LEVELS[level].hint ? hint : '', '', level, rack, '');
   Logger.log('Challenge code: ' + res.id + '  (worth up to ' + res.maxPoints + ' points)');
 }

@@ -111,20 +111,51 @@
     lf.setAttribute('aria-label', 'Lucky number was ' + n);
   }
 
-  function chosenLevel() {
-    const el = form.querySelector('input[name="level"]:checked');
-    return el ? el.value : 'High';
-  }
+  /* --- opponent's ladder level --- */
+  let opLevel = null;      // {name, level}
+  let levelTimer = null;
+  let levelAsk = 0;
 
-  function paintLevel() {
-    const L = R.LEVELS[chosenLevel()];
-    $('level-blurb').textContent = L.blurb;
+  function paintLevel(info) {
+    const step = $('ladder-step'), track = $('ladder-track');
+    track.innerHTML = Array.from({ length: R.MAX_LEVEL }, (_, i) => {
+      const n = i + 1;
+      return '<i class="' + (info && n < info.level ? 'on' : info && n === info.level ? 'here' : '') + '"></i>';
+    }).join('');
+    if (!info) {
+      step.textContent = '?'; step.classList.add('unknown');
+      $('ladder-title').textContent = "Type your opponent's name to see their level.";
+      $('level-blurb').textContent = '';
+      $('hint-field').hidden = false;
+      return;
+    }
+    const L = R.LEVELS[String(info.level)];
+    step.textContent = info.level; step.classList.remove('unknown');
+    $('ladder-title').textContent = info.name + ' is on Level ' + info.level + (info.level === R.MAX_LEVEL ? ' (top level)' : '');
+    $('level-blurb').textContent = R.blurb(String(info.level));
     $('hint-field').hidden = !L.hint;
   }
-  form.querySelectorAll('input[name="level"]').forEach(r => r.addEventListener('change', paintLevel));
+
+  async function lookUpLevel() {
+    const name = form.elements.opponent.value.trim();
+    if (deal) return;
+    if (!name) { opLevel = null; paintLevel(null); return; }
+    if (opLevel && opLevel.name.toLowerCase() === name.toLowerCase()) return;
+    const ask = ++levelAsk;
+    const res = await api('level', { name });
+    if (ask !== levelAsk || !res.ok) return;
+    opLevel = { name: res.name || name, level: res.level };
+    paintLevel(opLevel);
+  }
+  form.elements.opponent.addEventListener('input', () => {
+    opLevel = null;
+    clearTimeout(levelTimer);
+    levelTimer = setTimeout(lookUpLevel, 700);
+  });
+  form.elements.opponent.addEventListener('change', lookUpLevel);
 
   function lockChoices(locked) {
-    form.querySelectorAll('input[name="level"]').forEach(r => { r.disabled = locked; });
+    form.elements.opponent.readOnly = locked;
   }
 
   function resetCreate() {
@@ -142,7 +173,8 @@
     $('draw').hidden = true;
     $('create-error').textContent = '';
     if (keepSetter) form.elements.setter.value = keepSetter;
-    paintLevel();
+    opLevel = null;
+    paintLevel(null);
   }
 
   function spinTo(value) {
@@ -160,7 +192,14 @@
     const d = $('dice');
     d.disabled = true;
     $('btn-redraw').disabled = true;
-    const params = prevId ? { prev: prevId } : { level: chosenLevel() };
+    const opponent = form.elements.opponent.value.trim();
+    if (!prevId && !opponent) {
+      $('create-error').textContent = "Type your opponent's name first, so the game knows their level.";
+      d.disabled = false; $('btn-redraw').disabled = false;
+      return;
+    }
+    if (!prevId && !opLevel) await lookUpLevel();
+    const params = prevId ? { prev: prevId, opponent } : { opponent };
     hideLucky();
     const res = await api('deal', params);
     $('btn-redraw').disabled = false;
@@ -276,7 +315,7 @@
     const word = currentWord();
     const L = R.LEVELS[deal.level];
     if (word.length < L.minWord) {
-      $('create-error').textContent = deal.level + ' needs a word of at least ' + L.minWord + ' letters.';
+      $('create-error').textContent = R.levelName(deal.level) + ' needs a word of at least ' + L.minWord + ' letters.';
       return;
     }
     const res = await api('create', {
@@ -354,7 +393,7 @@
       : g.dice ? ' rolled a <span class="mini-die" aria-label="' + g.dice + '">' + g.dice + '</span>for ' + g.tiles.length + ' tiles'
       : ' drew ' + g.tiles.length + ' tiles';
     $('play-from').innerHTML = 'Right then! <strong>' + esc(g.setter) + '</strong>' + how + ' and hid a ' + g.length +
-      '-letter word <span class="level-tag ' + g.level + '">' + g.level + '</span>';
+      '-letter word <span class="level-tag' + (Number(g.level) >= 7 || g.level === 'High' ? ' lv-hard' : '') + '">' + R.levelName(g.level) + '</span>';
     $('play-hint').hidden = !g.hint;
     $('play-hint').textContent = g.hint ? 'Hint: ' + g.hint : '';
     $('play-error').textContent = '';
@@ -494,10 +533,10 @@
       clearBoard();
       return;
     }
-    showResult(game, res.result, res.boardScore);
+    showResult(game, res.result, res.boardScore, res.newLevel);
   }
 
-  function showResult(g, result, boardScore) {
+  function showResult(g, result, boardScore, newLevel) {
     stopClock();
     $('play-actions').hidden = true;
     $('rack').hidden = true;
@@ -532,7 +571,9 @@
       box.innerHTML = '<img class="bloom" src="img/hibiscus.svg" alt=""><div class="points">+' + g.points + '</div>' +
         '<h2>' + (result === 'correct' ? 'Brilliant, you cracked it!' : esc(g.opponent) + ' cracked it') + '</h2>' +
         '<p class="detail">' + (parts.length ? parts.join(', ') + '. ' : '') +
-        'Solved in ' + g.attempts + (g.attempts === 1 ? ' try' : ' tries') + '.</p>' + again;
+        'Solved in ' + g.attempts + (g.attempts === 1 ? ' try' : ' tries') + '.</p>' +
+        (newLevel ? '<div class="levelup">' + (newLevel >= R.MAX_LEVEL ? 'Top of the ladder! Level ' + newLevel : 'Level up! You\'re now Level ' + newLevel) + '</div><br>' : '') +
+        again;
     } else if (g.status === 'Expired') {
       box.innerHTML = '<h2>Out of time, I\'m afraid</h2><p>The 23 hours are up. The word was ' + esc(word) + '. Better luck next time.</p>' + again;
     } else {
@@ -605,7 +646,7 @@
       const who = mine ? 'From ' + esc(g.setter) : 'To ' + esc(g.opponent);
       const label = g.status === 'Pending' ? (mine ? 'Play' : 'Waiting') : g.status;
       const left = g.status === 'Pending' && g.expiresAt ? ', ' + fmtLeft(new Date(g.expiresAt) - Date.now()) : '';
-      const sub = g.level + ', ' + g.length + ' letters' + (g.points ? ', ' + g.points + ' pts' : '') +
+      const sub = R.levelName(g.level) + ', ' + g.length + ' letters' + (g.points ? ', ' + g.points + ' pts' : '') +
         (!mine && g.word ? ', ' + esc(g.word) : '') + left;
       return '<a class="game-row" href="?g=' + g.id + '"><span><span class="who">' + who + '</span><br><span class="sub">' +
         sub + '</span></span><span class="status ' + g.status + '">' + label + '</span></a>';
@@ -625,9 +666,13 @@
     if (!res.ok) { list.innerHTML = '<p class="empty">' + esc(res.error) + '</p>'; return; }
     list.innerHTML = res.leaderboard.length
       ? res.leaderboard.map(p => '<li><span>' + esc(p.player) + '<span class="solved">' + p.solved +
-          (p.solved === 1 ? ' word' : ' words') + ' solved</span></span><span class="pts">' + p.points + '</span></li>').join('')
+          (p.solved === 1 ? ' word' : ' words') + ' solved, <span class="lv">Level ' + (p.level || 1) + '</span></span></span><span class="pts">' + p.points + '</span></li>').join('')
       : '<p class="empty">No one has solved a word yet. Send the first challenge.</p>';
   }
+
+  /* ---------- how to play: level table ---------- */
+  $('levels-table').innerHTML = Array.from({ length: R.MAX_LEVEL }, (_, i) =>
+    '<dt>Level ' + (i + 1) + '</dt><dd>' + R.blurb(String(i + 1)) + '</dd>').join('');
 
   /* ---------- boot ---------- */
   if (DEMO) $('demo-banner').hidden = false;

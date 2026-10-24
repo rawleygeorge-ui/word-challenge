@@ -277,15 +277,14 @@
         <label>Your name<input name="setter" required maxlength="30"></label>
         <label>Opponent's name<input name="opponent" required maxlength="30"></label>
 
-        <fieldset class="levels">
-          <legend>Difficulty</legend>
-          <div class="level-options" id="level-options">
-            <label class="level"><input type="radio" name="level" value="Easy"><span>Easy</span></label>
-            <label class="level"><input type="radio" name="level" value="Medium"><span>Medium</span></label>
-            <label class="level"><input type="radio" name="level" value="High" checked><span>High</span></label>
+        <div class="ladder-card" id="ladder-card" aria-live="polite">
+          <div class="ladder-step unknown" id="ladder-step" aria-hidden="true">?</div>
+          <div class="ladder-text">
+            <p class="ladder-title" id="ladder-title">Type your opponent's name to see their level.</p>
+            <div class="ladder-track" id="ladder-track" aria-hidden="true"></div>
+            <p class="level-blurb" id="level-blurb"></p>
           </div>
-          <p class="level-blurb" id="level-blurb"></p>
-        </fieldset>
+        </div>
 
         <div class="dice-zone">
           <div class="lucky-die" aria-live="polite">
@@ -400,13 +399,13 @@
       <h2>Send a challenge</h2>
       <ol class="steps">
         <li>Tap <strong>Send a challenge</strong> and enter your name and your opponent's name.</li>
-        <li>Pick a difficulty. High is the default.</li>
+        <li>The game shows your opponent's <strong>level</strong>. It sets how hard your challenge will be.</li>
         <li>Tap the die to roll. The game has secretly rolled its own die too: that's the <strong>hidden lucky number</strong>.</li>
-        <li>If your roll matches the hidden number, it's a jackpot and you <strong>choose how many tiles</strong> you want, up to 20. Otherwise your roll decides: roll + 10 tiles on High (11–16), roll + 8 on Medium, roll + 6 on Easy.</li>
+        <li>If your roll matches the hidden number, it's a jackpot and you <strong>choose how many tiles</strong> you want, up to 20. Otherwise your roll decides: roll + 4 tiles at Level 1, rising to roll + 13 at Level 10.</li>
         <li>The letters on your tiles are always random, like a lucky draw.</li>
         <li>Tap tiles to spell your secret word. Use as many as you like, as long as the word is long enough for your level.</li>
         <li>Stuck with a bad hand? You get <strong>one free redraw</strong>.</li>
-        <li>On Easy and Medium you can add a hint. Then tap <strong>Create challenge</strong> and send the link or 5-letter code on WhatsApp.</li>
+        <li>Up to Level 6 you can add a hint. Then tap <strong>Create challenge</strong> and send the link or 5-letter code on WhatsApp.</li>
       </ol>
 
       <h2>Solve a challenge</h2>
@@ -426,19 +425,17 @@
       </ul>
 
       <h2>Levels</h2>
-      <dl class="levels-table">
-        <dt>Easy</dt><dd>Roll + 6 tiles (7–12). Word of 3+ letters, 3 tries, hints allowed.</dd>
-        <dt>Medium</dt><dd>Roll + 8 tiles (9–14). Word of 5+ letters, 3 tries, points ×1.5.</dd>
-        <dt>High</dt><dd>Roll + 10 tiles (11–16). Word of 7+ letters, 2 tries, no hint, points ×2.</dd>
-        <dt>Jackpot</dt><dd>On any level, match the hidden lucky number and choose up to 20 tiles.</dd>
-      </dl>
+      <p>Everyone starts at Level 1. Crack a word and you go up a level, all the way to 10. Miss one and you stay where you are. Challenges sent to you match your level, so they get harder as you climb.</p>
+      <dl class="levels-table" id="levels-table"></dl>
+      <p>Jackpot: on any level, match the hidden lucky number and choose up to 20 tiles.</p>
 
       <h2>Scoring</h2>
       <ul class="bullets">
         <li>Every letter has a point value, shown in the corner of its tile.</li>
         <li>Coloured squares boost your score: double or triple a letter, or double or triple the whole word. The centre flower doubles the word.</li>
         <li>Place your word to cover the best squares, then the level bonus applies.</li>
-        <li>Solve it on a later try and you keep less: 60% then 30% (Easy, Medium), or 50% on High's second try.</li>
+        <li>Solve it on a later try and you keep less: 60% then 30% with 3 tries, or 50% on the second of 2 tries.</li>
+        <li>Higher levels pay more: up to ×3 points at Level 10.</li>
         <li>Points go to the solver and add up on the Leaderboard.</li>
       </ul>
 

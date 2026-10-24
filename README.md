@@ -1,6 +1,6 @@
 # Word Challenge
 
-A two-player word game in a tropical garden. One player rolls the dice, gets a lucky draw of random letter tiles and hides a secret word in them. The other player has 23 hours to rebuild it on the board.
+A two-player word game in a tropical garden. One player rolls the dice, gets a lucky draw of random letter tiles and hides a secret word in them. The other player rebuilds it on the board before time runs out, and climbs a 10-level ladder as they win.
 
 - **Game data:** Google Sheet "Word Challenge – Game Data" (tabs: Games, Deals, Leaderboard)
 - **Game screen, graphics and app wrapper:** this repo, hosted free on GitHub Pages
@@ -65,12 +65,12 @@ The same guide is in the game under **How to play**.
 
 ### Send a challenge
 1. Tap **Send a challenge**, enter your name and your opponent's name.
-2. Pick a difficulty. **High** is the default.
+2. The game shows your opponent's **level** (1–10). It decides how hard the challenge is.
 3. Tap the die. The game has secretly rolled its own die too: the **hidden lucky number**.
 4. **Match it (jackpot):** you choose how many tiles you get, up to 20.
-   **Miss it:** your roll decides — roll + 10 tiles on High (11–16), roll + 8 on Medium, roll + 6 on Easy.
+   **Miss it:** your roll decides how many tiles (see the level table).
 5. The letters on your tiles are always random (a lucky draw). Tap tiles to spell your secret word. One free **redraw** if your hand is bad.
-6. Tap **Create challenge** and send the link or code on WhatsApp.
+6. Add a hint if their level allows one, then tap **Create challenge** and send the link or code on WhatsApp.
 
 ### Solve a challenge
 1. Open the link, or type the code on the home screen. You have **23 hours**.
@@ -83,18 +83,28 @@ The same guide is in the game under **How to play**.
 - Breaking a board rule doesn't use up a try — only a wrong word does.
 - Your rack holds every tile the setter was dealt. The ones they didn't use are **decoys**.
 
-### Levels
-| Level | Tiles dealt | Word length | Tries | Hint | Points |
-|---|---|---|---|---|---|
-| Easy | roll + 6 (7–12) | 3+ | 3 | allowed | ×1 |
-| Medium | roll + 8 (9–14) | 5+ | 3 | allowed | ×1.5 |
-| High | roll + 10 (11–16) | 7+ | 2 | none | ×2 |
-| Jackpot (any level) | your choice, up to 20 | as level | as level | as level | as level |
+### Levels (the level-up ladder)
+Everyone starts at **Level 1**. Crack a word and you move up one level, up to **Level 10**. Miss one or run out of time and you stay where you are. Challenges sent to you use your level, so they get harder as you climb.
+
+| Level | Tiles dealt | Shortest word | Tries | Hint | Time to answer | Points |
+|---|---|---|---|---|---|---|
+| 1 | 5–10 | 3 | 3 | yes | 23 h | ×1 |
+| 2 | 6–11 | 4 | 3 | yes | 23 h | ×1.2 |
+| 3 | 7–12 | 4 | 3 | yes | 23 h | ×1.4 |
+| 4 | 8–13 | 5 | 3 | yes | 20 h | ×1.6 |
+| 5 | 9–14 | 5 | 2 | yes | 20 h | ×1.8 |
+| 6 | 10–15 | 6 | 2 | yes | 18 h | ×2 |
+| 7 | 11–16 | 6 | 2 | no | 16 h | ×2.25 |
+| 8 | 12–17 | 7 | 2 | no | 14 h | ×2.5 |
+| 9 | 13–18 | 7 | 1 | no | 12 h | ×2.75 |
+| 10 | 14–19 | 8 | 1 | no | 12 h | ×3 |
+
+Jackpot (any level): match the hidden lucky number and choose up to 20 tiles. More tiles means more decoys for your opponent.
 
 ### Scoring
 - Each letter's value is in the corner of its tile (A = 1 … Q, Z = 10).
 - Coloured squares: **pink-red** triple word, **pink** double word (and the centre flower), **teal** triple letter, **pale aqua** double letter.
-- Score = board score × level bonus. A later try keeps less: 60% then 30% (Easy/Medium), 50% on High's second try.
+- Score = board score × level bonus. A later try keeps less: 60% then 30% with 3 tries, 50% on the second of 2 tries.
 - Points go to the solver and add up on the **Leaderboard** (also a tab in the sheet).
 
 ---
