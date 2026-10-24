@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Word Challenge</title>
+  <meta name="description" content="Roll the dice, set a secret word, and challenge a friend to rebuild it on the board.">
+  <meta name="theme-color" content="#0f3d2e">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Word Challenge">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Tropical scenery behind everything -->
+  <div class="scene" aria-hidden="true">
+    <img class="scene-land" src="img/landscape.svg" alt="">
+    <img class="scene-leaf scene-leaf-l" src="img/foliage-left.svg" alt="">
+    <img class="scene-leaf scene-leaf-r" src="img/foliage-right.svg" alt="">
+    <img class="scene-floor" src="img/foliage-bottom.svg" alt="">
+  </div>
+
+  <!-- App wrapper: splash while loading -->
+  <div id="splash" class="splash">
+    <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 319 115" role="img" aria-label="Word Challenge"><defs><linearGradient id="maple-logo1" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#f7e6bf"/><stop offset=".55" stop-color="#ecd29b"/><stop offset="1" stop-color="#e2c283"/></linearGradient></defs><g transform="rotate(-4 59.5 29.0)">
+  <rect x="30.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="30.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo1)"/>
+  <text x="59.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">W</text>
+  <text x="80.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">4</text>
+</g><g transform="rotate(2 123.5 29.0)">
+  <rect x="94.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="94.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo1)"/>
+  <text x="123.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">O</text>
+  <text x="144.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">1</text>
+</g><g transform="rotate(-2 187.5 29.0)">
+  <rect x="158.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="158.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo1)"/>
+  <text x="187.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">R</text>
+  <text x="208.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">1</text>
+</g><g transform="rotate(5 251.5 29.0)">
+  <rect x="222.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="222.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo1)"/>
+  <text x="251.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">D</text>
+  <text x="272.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">2</text>
+</g><g transform="rotate(0 15.5 87.5)">
+  <rect x="0" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="0" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo1)"/>
+  <text x="15.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">C</text>
+  <text x="26.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">3</text>
+</g><g transform="rotate(0 50.5 87.5)">
+  <rect x="35" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="35" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo1)"/>
+  <text x="50.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">H</text>
+  <text x="61.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">4</text>
+</g><g transform="rotate(0 85.5 87.5)">
+  <rect x="70" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="70" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo1)"/>
+  <text x="85.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">A</text>
+  <text x="96.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 120.5 87.5)">
+  <rect x="105" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="105" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo1)"/>
+  <text x="120.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">L</text>
+  <text x="131.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 155.5 87.5)">
+  <rect x="140" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="140" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo1)"/>
+  <text x="155.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">L</text>
+  <text x="166.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 190.5 87.5)">
+  <rect x="175" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="175" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo1)"/>
+  <text x="190.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">E</text>
+  <text x="201.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 225.5 87.5)">
+  <rect x="210" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="210" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo1)"/>
+  <text x="225.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">N</text>
+  <text x="236.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 260.5 87.5)">
+  <rect x="245" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="245" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo1)"/>
+  <text x="260.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">G</text>
+  <text x="271.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">2</text>
+</g><g transform="rotate(0 295.5 87.5)">
+  <rect x="280" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="280" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo1)"/>
+  <text x="295.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">E</text>
+  <text x="306.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g></svg>
+    <div class="splash-tiles" aria-label="Loading"><span>W</span><span>O</span><span>R</span><span>D</span></div>
+  </div>
+
+  <!-- App wrapper: shown when there is no signal -->
+  <div id="offline" class="splash" hidden>
+    <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 319 115" role="img" aria-label="Word Challenge"><defs><linearGradient id="maple-logo2" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#f7e6bf"/><stop offset=".55" stop-color="#ecd29b"/><stop offset="1" stop-color="#e2c283"/></linearGradient></defs><g transform="rotate(-4 59.5 29.0)">
+  <rect x="30.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="30.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo2)"/>
+  <text x="59.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">W</text>
+  <text x="80.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">4</text>
+</g><g transform="rotate(2 123.5 29.0)">
+  <rect x="94.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="94.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo2)"/>
+  <text x="123.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">O</text>
+  <text x="144.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">1</text>
+</g><g transform="rotate(-2 187.5 29.0)">
+  <rect x="158.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="158.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo2)"/>
+  <text x="187.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">R</text>
+  <text x="208.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">1</text>
+</g><g transform="rotate(5 251.5 29.0)">
+  <rect x="222.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="222.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo2)"/>
+  <text x="251.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">D</text>
+  <text x="272.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">2</text>
+</g><g transform="rotate(0 15.5 87.5)">
+  <rect x="0" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="0" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo2)"/>
+  <text x="15.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">C</text>
+  <text x="26.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">3</text>
+</g><g transform="rotate(0 50.5 87.5)">
+  <rect x="35" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="35" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo2)"/>
+  <text x="50.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">H</text>
+  <text x="61.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">4</text>
+</g><g transform="rotate(0 85.5 87.5)">
+  <rect x="70" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="70" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo2)"/>
+  <text x="85.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">A</text>
+  <text x="96.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 120.5 87.5)">
+  <rect x="105" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="105" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo2)"/>
+  <text x="120.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">L</text>
+  <text x="131.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 155.5 87.5)">
+  <rect x="140" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="140" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo2)"/>
+  <text x="155.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">L</text>
+  <text x="166.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 190.5 87.5)">
+  <rect x="175" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="175" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo2)"/>
+  <text x="190.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">E</text>
+  <text x="201.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 225.5 87.5)">
+  <rect x="210" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="210" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo2)"/>
+  <text x="225.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">N</text>
+  <text x="236.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 260.5 87.5)">
+  <rect x="245" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="245" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo2)"/>
+  <text x="260.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">G</text>
+  <text x="271.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">2</text>
+</g><g transform="rotate(0 295.5 87.5)">
+  <rect x="280" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="280" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo2)"/>
+  <text x="295.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">E</text>
+  <text x="306.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g></svg>
+    <h2>No signal</h2>
+    <p>Word Challenge needs the internet to send and check words. Move to an area with signal and try again.</p>
+    <button class="btn btn-primary" onclick="location.reload()">Try again</button>
+  </div>
+
+  <main class="board">
+    <header class="masthead">
+      <a href="./" class="logo" aria-label="Word Challenge home" data-go="home"><svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 319 115" role="img" aria-label="Word Challenge"><defs><linearGradient id="maple-logo3" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#f7e6bf"/><stop offset=".55" stop-color="#ecd29b"/><stop offset="1" stop-color="#e2c283"/></linearGradient></defs><g transform="rotate(-4 59.5 29.0)">
+  <rect x="30.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="30.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo3)"/>
+  <text x="59.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">W</text>
+  <text x="80.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">4</text>
+</g><g transform="rotate(2 123.5 29.0)">
+  <rect x="94.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="94.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo3)"/>
+  <text x="123.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">O</text>
+  <text x="144.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">1</text>
+</g><g transform="rotate(-2 187.5 29.0)">
+  <rect x="158.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="158.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo3)"/>
+  <text x="187.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">R</text>
+  <text x="208.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">1</text>
+</g><g transform="rotate(5 251.5 29.0)">
+  <rect x="222.5" y="3" width="58" height="58" rx="7.5" fill="#b98f4d"/>
+  <rect x="222.5" y="0" width="58" height="58" rx="7.5" fill="url(#maple-logo3)"/>
+  <text x="251.5" y="40.6" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="32.5" fill="#2a1c0c">D</text>
+  <text x="272.4" y="52.2" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="11.6" fill="#2a1c0c">2</text>
+</g><g transform="rotate(0 15.5 87.5)">
+  <rect x="0" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="0" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo3)"/>
+  <text x="15.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">C</text>
+  <text x="26.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">3</text>
+</g><g transform="rotate(0 50.5 87.5)">
+  <rect x="35" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="35" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo3)"/>
+  <text x="50.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">H</text>
+  <text x="61.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">4</text>
+</g><g transform="rotate(0 85.5 87.5)">
+  <rect x="70" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="70" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo3)"/>
+  <text x="85.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">A</text>
+  <text x="96.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 120.5 87.5)">
+  <rect x="105" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="105" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo3)"/>
+  <text x="120.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">L</text>
+  <text x="131.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 155.5 87.5)">
+  <rect x="140" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="140" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo3)"/>
+  <text x="155.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">L</text>
+  <text x="166.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 190.5 87.5)">
+  <rect x="175" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="175" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo3)"/>
+  <text x="190.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">E</text>
+  <text x="201.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 225.5 87.5)">
+  <rect x="210" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="210" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo3)"/>
+  <text x="225.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">N</text>
+  <text x="236.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g><g transform="rotate(0 260.5 87.5)">
+  <rect x="245" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="245" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo3)"/>
+  <text x="260.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">G</text>
+  <text x="271.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">2</text>
+</g><g transform="rotate(0 295.5 87.5)">
+  <rect x="280" y="75" width="31" height="31" rx="4.0" fill="#b98f4d"/>
+  <rect x="280" y="72" width="31" height="31" rx="4.0" fill="url(#maple-logo3)"/>
+  <text x="295.5" y="93.7" text-anchor="middle" font-family="'Alfa Slab One', Georgia, serif" font-size="17.4" fill="#2a1c0c">E</text>
+  <text x="306.7" y="99.9" text-anchor="end" font-family="'Bricolage Grotesque', Arial, sans-serif" font-weight="800" font-size="6.2" fill="#2a1c0c">1</text>
+</g></svg></a>
+    </header>
+
+    <div class="panel-wrap">
+    <div id="demo-banner" class="banner" hidden>
+      Practice mode: games are saved on this phone only. Add your web app link in <code>js/config.js</code> to play with friends.
+    </div>
+
+    <!-- HOME -->
+    <section id="view-home" class="view" hidden>
+      <p class="lede">Roll the dice, hide a word in scrambled tiles, and dare a friend to rebuild it on the garden board.</p>
+      <div class="actions">
+        <button class="btn btn-primary" data-go="create">Send a challenge</button>
+        <button class="btn btn-ghost" data-go="inbox">My challenges</button>
+      </div>
+      <form id="code-form" class="code-form" autocomplete="off">
+        <label for="code-input">Got a code from a friend?</label>
+        <div class="row">
+          <input id="code-input" maxlength="5" placeholder="e.g. K7RMX" autocapitalize="characters">
+          <button class="btn btn-small" type="submit">Play</button>
+        </div>
+      </form>
+      <nav class="home-links">
+        <button class="link" data-go="howto">How to play</button>
+        <button class="link" data-go="leaderboard">Leaderboard</button>
+      </nav>
+    </section>
+
+    <!-- CREATE -->
+    <section id="view-create" class="view" hidden>
+      <h1>Send a challenge</h1>
+      <form id="create-form" class="panel" autocomplete="off">
+        <label>Your name<input name="setter" required maxlength="30"></label>
+        <label>Opponent's name<input name="opponent" required maxlength="30"></label>
+
+        <fieldset class="levels">
+          <legend>Difficulty</legend>
+          <div class="level-options" id="level-options">
+            <label class="level"><input type="radio" name="level" value="Easy"><span>Easy</span></label>
+            <label class="level"><input type="radio" name="level" value="Medium"><span>Medium</span></label>
+            <label class="level"><input type="radio" name="level" value="High" checked><span>High</span></label>
+          </div>
+          <p class="level-blurb" id="level-blurb"></p>
+        </fieldset>
+
+        <div class="dice-zone">
+          <div class="lucky-die" aria-live="polite">
+            <span class="pipface lucky-face" id="lucky-face"><span class="q">?</span></span>
+            <span class="lucky-label">Hidden lucky number</span>
+          </div>
+          <button type="button" class="dice" id="dice" aria-label="Roll your die">
+            <span class="cube" id="cube">
+              <span class="face face-front" data-pips="1"></span>
+              <span class="face face-back" data-pips="6"></span>
+              <span class="face face-right" data-pips="3"></span>
+              <span class="face face-left" data-pips="4"></span>
+              <span class="face face-top" data-pips="2"></span>
+              <span class="face face-bottom" data-pips="5"></span>
+            </span>
+          </button>
+          <p class="dice-caption" id="dice-caption" aria-live="polite"></p>
+        </div>
+
+        <div class="jackpot" id="jackpot" hidden>
+          <img src="img/hibiscus.svg" alt="" class="jackpot-bloom">
+          <p class="jackpot-title" id="jackpot-title"></p>
+          <label for="jackpot-count">How many tiles do you want?</label>
+          <div class="jackpot-row">
+            <input type="range" id="jackpot-count" min="7" max="20" value="16">
+            <output id="jackpot-out" for="jackpot-count">16</output>
+          </div>
+          <button type="button" class="btn btn-small" id="btn-claim">Deal my tiles</button>
+        </div>
+
+        <div class="draw" id="draw" hidden>
+          <p class="draw-label">Your lucky draw <span class="note" id="draw-count"></span></p>
+          <div class="rack" id="draw-rack" aria-label="Tiles you were dealt"></div>
+          <p class="draw-label">Your secret word <span class="note" id="word-count"></span></p>
+          <div class="word-slots" id="word-slots" aria-live="polite" aria-label="Your word"></div>
+          <div class="draw-tools">
+            <button type="button" class="btn btn-ghost btn-small" id="btn-word-clear">Clear word</button>
+            <button type="button" class="btn btn-ghost btn-small" id="btn-redraw">Redraw tiles (1 free)</button>
+          </div>
+        </div>
+        <label id="hint-field">Hint <span class="note">optional</span><input name="hint" maxlength="120" placeholder="e.g. Something you drink in the morning"></label>
+        <p class="form-error" id="create-error" role="alert"></p>
+        <button class="btn btn-primary" type="submit">Create challenge</button>
+      </form>
+      <button class="link" data-go="home">Back</button>
+    </section>
+
+    <!-- SHARE -->
+    <section id="view-share" class="view" hidden>
+      <h1>Challenge ready</h1>
+      <p class="lede" id="share-text"></p>
+      <div class="code-tiles" id="share-code"></div>
+      <div class="actions">
+        <a class="btn btn-primary" id="share-whatsapp" target="_blank" rel="noopener">Send on WhatsApp</a>
+        <button class="btn btn-ghost" id="share-copy">Copy link</button>
+      </div>
+      <p class="copied" id="copied" aria-live="polite"></p>
+      <button class="link" data-go="home">Done</button>
+    </section>
+
+    <!-- PLAY -->
+    <section id="view-play" class="view" hidden>
+      <p class="from" id="play-from"></p>
+      <p class="hint" id="play-hint" hidden></p>
+      <p class="clock" id="play-clock"></p>
+      <div class="grid-wrap"><div class="grid" id="grid" role="grid" aria-label="Game board"></div></div>
+      <ul class="legend" aria-label="Board squares">
+        <li><i class="cell TW"></i>Triple word</li>
+        <li><i class="cell DW"></i>Double word</li>
+        <li><i class="cell TL"></i>Triple letter</li>
+        <li><i class="cell DL"></i>Double letter</li>
+      </ul>
+      <p class="rule" id="play-rule"></p>
+      <div class="rack" id="rack" aria-label="Your tiles"></div>
+      <div class="meta">
+        <span id="play-worth"></span>
+        <span class="tries" id="play-tries" aria-label="Tries left"></span>
+      </div>
+      <p class="form-error" id="play-error" role="alert"></p>
+      <div class="actions actions-play" id="play-actions">
+        <button class="btn btn-ghost btn-small" id="btn-shuffle">Shuffle</button>
+        <button class="btn btn-ghost btn-small" id="btn-clear">Clear</button>
+        <button class="btn btn-primary" id="btn-submit" disabled>Check word</button>
+      </div>
+      <div class="result" id="play-result" hidden></div>
+      <button class="link" data-go="home">Home</button>
+    </section>
+
+    <!-- INBOX -->
+    <section id="view-inbox" class="view" hidden>
+      <h1>My challenges</h1>
+      <form id="inbox-form" class="row" autocomplete="off">
+        <input name="name" placeholder="Your name" required maxlength="30" aria-label="Your name">
+        <button class="btn btn-small" type="submit">Show</button>
+      </form>
+      <div id="inbox-list"></div>
+      <button class="link" data-go="home">Back</button>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section id="view-leaderboard" class="view" hidden>
+      <h1>Leaderboard</h1>
+      <ol class="leaders" id="leaders"></ol>
+      <button class="link" data-go="home">Back</button>
+    </section>
+
+    <!-- HOW TO PLAY -->
+    <section id="view-howto" class="view manual" hidden>
+      <h1>How to play</h1>
+      <p class="lede">Two players. One sets a secret word, the other rebuilds it on the board.</p>
+
+      <h2>Send a challenge</h2>
+      <ol class="steps">
+        <li>Tap <strong>Send a challenge</strong> and enter your name and your opponent's name.</li>
+        <li>Pick a difficulty. High is the default.</li>
+        <li>Tap the die to roll. The game has secretly rolled its own die too: that's the <strong>hidden lucky number</strong>.</li>
+        <li>If your roll matches the hidden number, it's a jackpot and you <strong>choose how many tiles</strong> you want, up to 20. Otherwise your roll decides: roll + 10 tiles on High (11–16), roll + 8 on Medium, roll + 6 on Easy.</li>
+        <li>The letters on your tiles are always random, like a lucky draw.</li>
+        <li>Tap tiles to spell your secret word. Use as many as you like, as long as the word is long enough for your level.</li>
+        <li>Stuck with a bad hand? You get <strong>one free redraw</strong>.</li>
+        <li>On Easy and Medium you can add a hint. Then tap <strong>Create challenge</strong> and send the link or 5-letter code on WhatsApp.</li>
+      </ol>
+
+      <h2>Solve a challenge</h2>
+      <ol class="steps">
+        <li>Open the link, or type the code on the home screen. You have <strong>23 hours</strong> from when it was sent.</li>
+        <li>Your scrambled tiles sit on the wooden rack. Tap a tile, then tap a square to place it. Tap a placed tile to take it back.</li>
+        <li>Lay the word in one straight line through the <strong>centre flower</strong>.</li>
+        <li>Tap <strong>Check word</strong>.</li>
+      </ol>
+
+      <h2>Board rules</h2>
+      <ul class="bullets">
+        <li>Words go <strong>across</strong> (read left to right) or <strong>down</strong> (read top to bottom). Nothing else.</li>
+        <li>No diagonals, no reading backwards, no gaps between tiles.</li>
+        <li>Breaking a board rule doesn't use up a try. Only a wrong word does.</li>
+        <li>Your rack holds every tile the setter was dealt. The ones they didn't use are decoys, so leave them on the rack.</li>
+      </ul>
+
+      <h2>Levels</h2>
+      <dl class="levels-table">
+        <dt>Easy</dt><dd>Roll + 6 tiles (7–12). Word of 3+ letters, 3 tries, hints allowed.</dd>
+        <dt>Medium</dt><dd>Roll + 8 tiles (9–14). Word of 5+ letters, 3 tries, points ×1.5.</dd>
+        <dt>High</dt><dd>Roll + 10 tiles (11–16). Word of 7+ letters, 2 tries, no hint, points ×2.</dd>
+        <dt>Jackpot</dt><dd>On any level, match the hidden lucky number and choose up to 20 tiles.</dd>
+      </dl>
+
+      <h2>Scoring</h2>
+      <ul class="bullets">
+        <li>Every letter has a point value, shown in the corner of its tile.</li>
+        <li>Coloured squares boost your score: double or triple a letter, or double or triple the whole word. The centre flower doubles the word.</li>
+        <li>Place your word to cover the best squares, then the level bonus applies.</li>
+        <li>Solve it on a later try and you keep less: 60% then 30% (Easy, Medium), or 50% on High's second try.</li>
+        <li>Points go to the solver and add up on the Leaderboard.</li>
+      </ul>
+
+      <h2>Good to know</h2>
+      <ul class="bullets">
+        <li>Unanswered challenges expire after 23 hours and the word is revealed.</li>
+        <li><strong>My challenges</strong> lists words waiting for you and words you've sent.</li>
+        <li>Add the game to your home screen: on Android tap <strong>Install</strong> when asked; on iPhone tap Share, then <strong>Add to Home Screen</strong>.</li>
+      </ul>
+      <button class="btn btn-primary btn-block" data-go="create">Send a challenge</button>
+      <button class="link" data-go="home">Back</button>
+    </section>
+    </div>
+
+    <div class="loading" id="loading" hidden><span></span><span></span><span></span></div>
+  </main>
+
+  <!-- App wrapper: install prompt (Android Chrome) -->
+  <div id="install" class="install" hidden>
+    <span>Add Word Challenge to your home screen?</span>
+    <button class="btn btn-small" id="installBtn">Install</button>
+    <button class="install-close" id="installClose" aria-label="Not now">✕</button>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/rules.js"></script>
+  <script src="js/demo-api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/wrapper.js"></script>
+</body>
+</html>
