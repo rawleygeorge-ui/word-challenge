@@ -1,3 +1,6 @@
+/** @OnlyCurrentDoc */
+// Limits this script to this one spreadsheet — it cannot open any other file.
+
 /**
  * Word Challenge — Google Sheets backend (Apps Script web app)
  *
