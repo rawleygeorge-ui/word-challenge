@@ -2,7 +2,7 @@
 // Caches the game's own files so it opens instantly and can show a "No signal" screen.
 // Calls to the Google Sheet (Apps Script) always go live and are never cached.
 
-const CACHE = 'word-challenge-v2';   // bump to v2, v3... whenever you change these files
+const CACHE = 'word-challenge-v3';   // bump to v2, v3... whenever you change these files
 const SHELL = [
   './',
   './index.html',
