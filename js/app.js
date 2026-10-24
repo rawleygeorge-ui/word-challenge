@@ -295,7 +295,14 @@
     codeBox.innerHTML = '';
     id.split('').forEach(c => codeBox.appendChild(tileEl(c, 'div')));
     const url = shareUrl(id);
-    const msg = "I've set you a Word Challenge! Rebuild my secret word within 23 hours: " + url + ' (code ' + id + ')';
+    // Opponent-facing invite, in a cheeky British voice (one picked at random)
+    const invites = [
+      "Right then, I've set you a Word Challenge. Fancy your chances? You've got 23 hours to crack my secret word, so get your thinking cap on: ",
+      "Oi! Word Challenge for you. Bet you can't crack this one. 23 hours, no pressure: ",
+      "Alright? I've hidden a word in a pile of tiles. Have a go, if you're feeling brave. You've got 23 hours: ",
+      "Go on then, clever clogs. Crack my secret word before the 23 hours are up: "
+    ];
+    const msg = invites[Math.floor(Math.random() * invites.length)] + url + ' (code ' + id + '). Cheers!';
     $('share-whatsapp').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
     $('copied').textContent = '';
     $('share-copy').onclick = async () => {
@@ -346,14 +353,14 @@
     const how = g.jackpot ? ' hit the hidden lucky number and chose ' + g.tiles.length + ' tiles'
       : g.dice ? ' rolled a <span class="mini-die" aria-label="' + g.dice + '">' + g.dice + '</span>for ' + g.tiles.length + ' tiles'
       : ' drew ' + g.tiles.length + ' tiles';
-    $('play-from').innerHTML = '<strong>' + esc(g.setter) + '</strong>' + how + ' and hid a ' + g.length +
+    $('play-from').innerHTML = 'Right then! <strong>' + esc(g.setter) + '</strong>' + how + ' and hid a ' + g.length +
       '-letter word <span class="level-tag ' + g.level + '">' + g.level + '</span>';
     $('play-hint').hidden = !g.hint;
     $('play-hint').textContent = g.hint ? 'Hint: ' + g.hint : '';
     $('play-error').textContent = '';
     const decoys = g.tiles.length - g.length;
-    $('play-rule').textContent = 'Tap a tile, then a square. Lay the word in one line through the flower, reading across or down.' +
-      (decoys > 0 ? ' ' + decoys + (decoys === 1 ? ' tile is a decoy.' : ' tiles are decoys.') : '');
+    $('play-rule').textContent = 'Tap a tile, then a square. Pop the word in one line through the flower, reading across or down.' +
+      (decoys > 0 ? ' Mind the ' + decoys + (decoys === 1 ? ' decoy, it\'s a sneaky one.' : ' decoys, they\'re sneaky.') : '');
     $('grid').classList.remove('won', 'shake');
     fitGrid();
     startClock(g);
@@ -435,7 +442,7 @@
     }
     let idx = selected;
     if (idx === null || rack[idx].onBoard) {
-      $('play-error').textContent = 'Pick a tile from your rack first.';
+      $('play-error').textContent = 'Hang on, pick a tile from your rack first.';
       return;
     }
     board[key] = idx;
@@ -482,7 +489,8 @@
     if (res.result === 'wrong') {
       const g = $('grid');
       g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake');
-      $('play-error').textContent = local.word + " isn't it. " + game.attemptsLeft + (game.attemptsLeft === 1 ? ' try' : ' tries') + ' left.';
+      $('play-error').textContent = 'Not quite, mate. ' + local.word + " isn't it. " +
+        (game.attemptsLeft === 1 ? 'Last go, make it count!' : game.attemptsLeft + ' goes left.');
       clearBoard();
       return;
     }
@@ -513,7 +521,7 @@
 
     const box = $('play-result');
     box.hidden = false;
-    const again = '<button class="btn btn-primary" data-go="create">Send one back</button>';
+    const again = '<button class="btn btn-primary" data-go="create">Get your own back</button>';
     if (g.status === 'Solved') {
       const L = R.LEVELS[g.level];
       const share = R.TRY_SHARE[L.tries][g.attempts - 1];
@@ -522,14 +530,14 @@
       if (L.bonus !== 1) parts.push(g.level + ' bonus ×' + L.bonus);
       if (share !== 1) parts.push('try ' + g.attempts + ' keeps ' + Math.round(share * 100) + '%');
       box.innerHTML = '<img class="bloom" src="img/hibiscus.svg" alt=""><div class="points">+' + g.points + '</div>' +
-        '<h2>' + (result === 'correct' ? 'You cracked it' : esc(g.opponent) + ' cracked it') + '</h2>' +
+        '<h2>' + (result === 'correct' ? 'Brilliant, you cracked it!' : esc(g.opponent) + ' cracked it') + '</h2>' +
         '<p class="detail">' + (parts.length ? parts.join(', ') + '. ' : '') +
         'Solved in ' + g.attempts + (g.attempts === 1 ? ' try' : ' tries') + '.</p>' + again;
     } else if (g.status === 'Expired') {
-      box.innerHTML = '<h2>Time ran out</h2><p>The 23 hours are up. The word was ' + esc(word) + '.</p>' + again;
+      box.innerHTML = '<h2>Out of time, I\'m afraid</h2><p>The 23 hours are up. The word was ' + esc(word) + '. Better luck next time.</p>' + again;
     } else {
-      box.innerHTML = '<h2>' + (result === 'failed' ? 'Out of tries' : 'This one is finished') + '</h2>' +
-        '<p>The word was ' + esc(word) + '. No points this time.</p>' + again;
+      box.innerHTML = '<h2>' + (result === 'failed' ? 'Gutted, that\'s your lot' : 'This one\'s done and dusted') + '</h2>' +
+        '<p>The word was ' + esc(word) + '. No points this time, but chin up.</p>' + again;
     }
   }
 
@@ -547,7 +555,7 @@
     const end = new Date(g.expiresAt).getTime();
     const tick = () => {
       const left = end - Date.now();
-      el.textContent = fmtLeft(left) + ' to answer';
+      el.textContent = fmtLeft(left) + ' on the clock';
       el.classList.toggle('urgent', left < 3600000);
       if (left <= 0) {
         stopClock();
